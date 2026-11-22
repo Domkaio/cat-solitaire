@@ -22,13 +22,21 @@ function settle(){
  if(g.done.length===8){let list=read(recordKey,[]);if(!list.some(x=>x.id===g.id)){list.push({id:g.id,n:g.n,points:points(),time:g.seconds});write(recordKey,list)}show('<h2>Mesa completa ✧</h2><p>'+points()+' pontos em '+clock(g.seconds)+'. Seu resultado entrou nos recordes locais.</p>')}
 }
 function move(a,i,b){if(!legal(a,i,b))return false;checkpoint();g.piles[b].push(...g.piles[a].splice(i));animated=[b];settle();return true}
+const sizeControl=$('size');
+const savedSize=String(read(key+'.size',100));
+sizeControl.value=['80','100','125'].includes(savedSize)?savedSize:'100';
+function applySize(){
+ $('board').style.width=sizeControl.value+'%';
+ render();
+}
+sizeControl.onchange=()=>{write(key+'.size',Number(sizeControl.value));applySize()};
 function render(){
- $('score').textContent=points();$('time').textContent=clock(g.seconds);$('count').textContent=g.stock.length/10; $('deal').disabled=!g.stock.length; $('progress').textContent=g.done.length+'/8'; $('undo').disabled=!g.history.length||g.done.length===8;
- const board=$('board');board.replaceChildren();let max=0;
+ $('score').textContent=points();$('time').textContent=clock(g.seconds);const rows=g.stock.length/10; $('count').textContent=rows===0?'Reserva vazia':rows+(rows===1?' fileira restante':' fileiras restantes'); $('deal').disabled=!g.stock.length; $('progress').textContent=g.done.length+'/8'; $('undo').disabled=!g.history.length||g.done.length===8;
+ const board=$('board');board.style.width=sizeControl.value+'%';board.replaceChildren();let max=0;
  g.piles.forEach((p,a)=>{const col=document.createElement('div');col.className='pile'+(a===target?' target':'');col.dataset.a=a;board.append(col);let top=0;
  p.forEach((c,i)=>{const el=document.createElement('div');el.className='card '+(!c.up?'back':c.s%2?'red':'')+(selected?.a===a&&i>=selected.i?' picked':'')+(animated.includes(a)&&i===p.length-1?' arrival':'');el.style.top=top+'px';el.dataset.i=i;
  if(c.up){el.innerHTML=ranks[c.r]+'<em>'+suits[c.s]+'</em><span class="pip">'+suits[c.s]+'</span><span class="corner">'+ranks[c.r]+'</span>';el.draggable=sequence(p,i)}
- col.append(el);if(i<p.length-1)top+=c.up?Math.max(19,Math.min(30,innerWidth*.023)):Math.max(6,Math.min(13,innerWidth*.011));
+ col.append(el);if(i<p.length-1)top+=c.up?Math.max(18,col.clientWidth*.25):Math.max(6,Math.min(13,innerWidth*.011));
  });max=Math.max(max,top+col.clientWidth/0.71)});board.style.height=Math.ceil(max+12)+'px';animated=[]
 }
 function pos(e){const col=e.target.closest('.pile');return col?{a:+col.dataset.a,i:+(e.target.closest('.card')?.dataset.i??-1)}:null}
@@ -63,8 +71,8 @@ $('records').onclick=()=>{const list=read(recordKey,[]);show('<h2>Recordes locai
 setInterval(()=>{if(!$('table').hidden&&!document.hidden&&!dialog.open&&g.done.length<8){g.seconds++;$('time').textContent=clock(g.seconds);if(g.seconds%5===0)save()}},1000);addEventListener('pagehide',save);document.addEventListener('visibilitychange',save);
 const canvas=$('sky'),ctx=canvas.getContext('2d');let dx=0,dy=0;
 function paint(){const w=canvas.width=innerWidth,h=canvas.height=innerHeight;ctx.clearRect(0,0,w,h);let seed=947;const rand=()=>((seed=seed*16807%2147483647)/2147483647);
- for(let i=0;i<220;i++){let x=rand()*w+dx,y=rand()*h+dy,r=rand();ctx.fillStyle='rgba(237,219,187,'+(.15+r*.55)+')';ctx.fillRect(x,y,r*2+.5,r*2+.5);if(r>.97){ctx.fillRect(x-3,y+1,8,1);ctx.fillRect(x+1,y-3,1,8)}}
- for(let layer=0;layer<3;layer++){ctx.beginPath();ctx.moveTo(-30,h);for(let x=-30;x<=w+30;x+=8){const base=h*(.78+layer*.085),ridge=Math.sin(x*.013+layer)*20+Math.cos(x*.005+layer)*32;ctx.lineTo(x+dx*layer,base+ridge-rand()*7+dy*layer)}ctx.lineTo(w+40,h);ctx.closePath();ctx.fillStyle=['#275043','#1d4036','#13382f'][layer];ctx.fill()}
+ for(let i=0;i<220;i++){let x=rand()*w+dx,y=rand()*h+dy,r=rand();ctx.fillStyle='rgba(193,194,255,'+(.15+r*.55)+')';ctx.fillRect(x,y,r*2+.5,r*2+.5);if(r>.97){ctx.fillRect(x-3,y+1,8,1);ctx.fillRect(x+1,y-3,1,8)}}
+ for(let layer=0;layer<3;layer++){ctx.beginPath();ctx.moveTo(-30,h);for(let x=-30;x<=w+30;x+=8){const base=h*(.78+layer*.085),ridge=Math.sin(x*.013+layer)*20+Math.cos(x*.005+layer)*32;ctx.lineTo(x+dx*layer,base+ridge-rand()*7+dy*layer)}ctx.lineTo(w+40,h);ctx.closePath();ctx.fillStyle=['#302852','#201e43','#131832'][layer];ctx.fill()}
 }
 let frame=0;addEventListener('pointermove',e=>{if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;dx=(e.clientX/innerWidth-.5)*8;dy=(e.clientY/innerHeight-.5)*6;if(!frame)frame=requestAnimationFrame(()=>{paint();frame=0})});addEventListener('resize',()=>{paint();render()});paint();syncLobby();
 
