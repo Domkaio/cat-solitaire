@@ -96,6 +96,7 @@ function saveUndoState() {
 }
 
 function finishTurn() {
+  const previousCount = game.done.length;
   lastTap = null;
   for (const p of game.piles) {
     while (p.length) {
@@ -113,7 +114,10 @@ function finishTurn() {
   const landing = animatedColumns.at(-1);
   renderBoard();
   showSparks(landing);
+  FX.finishTurn(game.done.length - previousCount);
+  cardAudio.play(game.done.length > previousCount ? 'seq' : 'place');
   if (game.done.length === 8) {
+    setTimeout(() => cardAudio.play('win'), 600);
     let list = readStoredValue(recordKey, []);
     if (!list.some((x) => x.id === game.id)) {
       list.push({
@@ -305,14 +309,14 @@ getElement('deal').onclick = () => {
   });
   animatedColumns = game.piles.map((_, i) => i);
   finishTurn();
-  playCard('compra');
+  cardAudio.play('deal');
   dealFlight(false);
 };
 getElement('undo').onclick = () => {
   if (!game.history.length || game.done.length === 8) return;
   [game.piles, game.stock, game.done] = JSON.parse(game.history.pop());
   lastTap = null;
-  playCard('toque');
+  cardAudio.play('undo');
   game.moves++;
   selected = null;
   hintColumn = -1;
@@ -321,7 +325,7 @@ getElement('undo').onclick = () => {
   renderBoard();
 };
 getElement('hint').onclick = () => {
-  playCard('dica');
+  cardAudio.play('hint');
   let best = null;
   game.piles.forEach((p, a) =>
     p.forEach((c, i) =>
@@ -410,7 +414,7 @@ getElement('play').onclick = () => {
         getElement('note').textContent = '';
         dialog.close();
         enterTable();
-        playCard('abertura');
+        cardAudio.play('open');
         dealFlight(true);
         save();
       }),
@@ -507,30 +511,20 @@ function updateAudioControls() {
     button.setAttribute('aria-pressed', String(on));
   }
 }
-const sounds = {
-  menu: new Audio('audio/menu.wav'),
-  abertura: new Audio('audio/abertura.wav'),
-  dica: new Audio('audio/dica.wav'),
-  toque: new Audio('audio/toque.wav'),
-  compra: new Audio('audio/compra.wav'),
-};
 const level = getElement('volume');
 level.value = readStoredValue(storageKey + '.volume', 55);
 
-function playCard(name) {
-  if (muted) return;
-  const sound = sounds[name];
-  sound.volume = Number(level.value) / 100;
-  sound.currentTime = 0;
-  sound.play().catch(() => {});
-}
-level.oninput = () => storeValue(storageKey + '.volume', Number(level.value));
+level.oninput = () => {
+  storeValue(storageKey + '.volume', Number(level.value));
+  cardAudio.updateVolume();
+};
 
 function showSparks(col) {
   if (col == null || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const card = getElement('board').children[col]?.lastElementChild;
   if (!card) return;
   const box = card.getBoundingClientRect();
+  FX.burst(box.left + box.width / 2, box.top + box.height / 2, 16);
   for (let i = 0; i < 6; i++) {
     const star = document.createElement('span');
     star.className = 'spark';
@@ -570,45 +564,6 @@ getElement('home').onclick = () => {
   scrollTo(0, 0);
 };
 
-function fly(el, origin, delay) {
-  if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  el.classList.remove('arrival');
-  const box = el.getBoundingClientRect();
-  el.animate(
-    [
-      {
-        transform:
-          'translate(' +
-          (origin.left - box.left) +
-          'px,' +
-          (origin.top - box.top) +
-          'px) scale(.8) rotate(-10deg)',
-        opacity: 0.65,
-      },
-      {
-        transform: 'none',
-        opacity: 1,
-      },
-    ],
-    {
-      delay,
-      duration: 480,
-      fill: 'backwards',
-      easing: 'cubic-bezier(.22,1,.36,1)',
-    },
-  );
-}
-
-function dealFlight(opening) {
-  const origin = getElement('deal').getBoundingClientRect();
-  Array.from(getElement('board').children).forEach((pile, col) => {
-    if (opening)
-      Array.from(pile.children).forEach((el, row) =>
-        fly(el, origin, (row * 10 + col) * 15),
-      );
-    else fly(pile.lastElementChild, origin, col * 32);
-  });
-}
 getElement('settings').onclick = () => {
   show('');
   getElement('preferences').hidden = false;
@@ -620,8 +575,8 @@ getElement('audioPref').onclick = () => {
   muted = !muted;
   storeValue(storageKey + '.muted', muted);
   storeValue(storageKey + '.musicMuted', musicMuted);
-  if (muted) Object.values(sounds).forEach((sound) => sound.pause());
-  else playCard('menu');
+  cardAudio.updateVolume();
+  if (!muted) cardAudio.play('menu');
   updateAudioControls();
 };
 getElement('musicPref').onclick = () => {
@@ -654,7 +609,7 @@ function releaseCards() {
 getElement('board').addEventListener('pointerdown', (e) => {
   releaseCards();
   const t = getCardPosition(e);
-  if (e.button === 0 && t && game.piles[t.a][t.i]?.up) playCard('toque');
+  if (e.button === 0 && t && game.piles[t.a][t.i]?.up) cardAudio.play('pick');
   if (e.button !== 0 || !t || !isMovableSequence(game.piles[t.a], t.i)) return;
   held = Array.from(getElement('board').children[t.a].children).slice(t.i);
   held.forEach((el) => el.classList.add('held'));
@@ -681,7 +636,7 @@ document.addEventListener(
     if (!event.isTrusted) return;
     syncMusic();
     const button = event.target.closest('button');
-    if (button && !button.disabled) playCard('menu');
+    if (button && !button.disabled && !['deal', 'hint', 'undo', 'rewind', 'audioPref'].includes(button.id)) cardAudio.play('menu');
   },
   true,
 );
