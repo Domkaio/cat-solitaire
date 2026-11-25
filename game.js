@@ -79,7 +79,7 @@ $('play').onclick=()=>{
  article.querySelectorAll('[data-n]').forEach(button=>button.onclick=()=>{
   g=create(Number(button.dataset.n));saved=g;selected=null;target=-1;
   animated=g.piles.map((_,i)=>i);$('note').textContent='';
-  dialog.close();enterTable();dealFlight(true);save();
+  dialog.close();enterTable();playCard('abertura');dealFlight(true);save();
  });
 };
 $('records').onclick=()=>{const list=read(recordKey,[]);show('<h2>Recordes locais</h2>'+[1,2,4].map(n=>{const rows=list.filter(x=>x.n===n);return '<h3>'+n+(n===1?' naipe':' naipes')+'</h3><p>'+(rows.length?'Melhor pontuação · '+Math.max(...rows.map(x=>x.points))+'<br>Melhor tempo · '+clock(Math.min(...rows.map(x=>x.time))):'Nenhuma vitória ainda.')+'</p>'}).join(''))};
@@ -93,7 +93,7 @@ let frame=0;addEventListener('pointermove',e=>{if(matchMedia('(prefers-reduced-m
 
 let muted=read(key+'.muted',false);
 function soundLabel(){ $('sound').textContent=muted?'Som desligado':'Som ligado';$('sound').setAttribute('aria-pressed',String(!muted)) }
-const sounds={dica:new Audio('audio/dica.wav'),toque:new Audio('audio/toque.wav'),compra:new Audio('audio/compra.wav')};
+const sounds={menu:new Audio('audio/menu.wav'),abertura:new Audio('audio/abertura.wav'),dica:new Audio('audio/dica.wav'),toque:new Audio('audio/toque.wav'),compra:new Audio('audio/compra.wav')};
 const level=$('volume');
 level.value=read(key+'.volume',55);
 function playCard(name){
@@ -117,7 +117,7 @@ function syncLobby(){ $('resume').hidden=!saved||g.done.length===8;$('play').fir
 function enterTable(){lastTap=null;$('lobby').hidden=true;$('table').hidden=false;render()}
 $('resume').onclick=enterTable;
 $('home').onclick=()=>{save();selected=null;target=-1;lastTap=null;$('lobby').hidden=false;$('table').hidden=true;syncLobby();scrollTo(0,0)};
-$('sound').onclick=()=>{muted=!muted;write(key+'.muted',muted);soundLabel()};soundLabel();
+$('sound').onclick=()=>{muted=!muted;write(key+'.muted',muted);soundLabel();syncMusic()};soundLabel();
 
 function fly(el,origin,delay){
  if(!el||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
@@ -161,3 +161,26 @@ $('board').addEventListener('pointerdown',e=>{
  held.forEach(el=>el.classList.add('held'));
 });
 for(const event of ['pointerup','pointercancel','dragend','blur'])window.addEventListener(event,releaseCards);
+
+const soundtrack=new Audio('audio/orbita.mp3');
+soundtrack.loop=true;
+const musicLevel=$('musicLevel');
+musicLevel.value=read(key+'.musicVolume',24);
+let interacted=false;
+function syncMusic(){
+ soundtrack.volume=Number(musicLevel.value)/100;
+ if(muted||document.hidden||!interacted||!soundtrack.volume)soundtrack.pause();
+ else if(soundtrack.paused)soundtrack.play().catch(()=>{});
+}
+musicLevel.oninput=()=>{
+ write(key+'.musicVolume',Number(musicLevel.value));
+ syncMusic();
+};
+document.addEventListener('click',event=>{
+ if(!event.isTrusted)return;
+ interacted=true;
+ syncMusic();
+ const button=event.target.closest('button');
+ if(button&&!button.disabled)playCard('menu');
+},true);
+document.addEventListener('visibilitychange',syncMusic);
