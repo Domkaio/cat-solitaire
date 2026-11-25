@@ -1,8 +1,102 @@
 <!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#10122d"><title>Cat Solitarie</title><link rel="icon" href="felisnoc.png"><link rel="stylesheet" href="style.css"></head>
-<body><canvas id="sky" aria-hidden="true"></canvas>
-<header><strong><img src="felisnoc.png" alt=""> Cat Solitarie</strong><nav><button id="sound" aria-pressed="true">Som ligado</button><button id="help" aria-label="Como jogar">?</button></nav></header>
-<section id="lobby"><div class="hero-copy"><small>PACIÊNCIA SPIDER</small><h1>Cat<br><i>Solitarie</i></h1><p>Do rei ao ás, uma carta de cada vez.</p><div class="choices"><button id="play">Jogar agora <span>♠</span></button><button id="resume" hidden>Continuar</button></div><button id="records">♜ &nbsp; Recordes locais</button></div>
-<div class="fan" aria-hidden="true"><div class="poster left"><label>Q ♥</label><b>♥</b></div><div class="poster right"><label>K ♣</label><b>♣</b></div><div class="poster center"><label>A ♠</label><div class="seal"><img src="felisnoc.png" alt=""></div><i>Cat Solitarie</i><label>A ♠</label></div></div></section>
-<main id="table" hidden><div class="tools"><button id="home">‹ Lobby</button><div class="metrics"><b class="metric" data-caption="Tempo" id="time" title="Tempo"></b><span>·</span><b class="metric" data-caption="Pontos"><span id="score"></span></b><span>·</span><b class="metric" data-caption="Sequências" id="progress" title="Sequências completas"></b></div><button id="deal" title="Distribuir uma carta em cada coluna"><span class="deck-icon" aria-hidden="true">♠</span><span><b>Comprar 10</b><small id="count"></small></span></button></div><div class="board-window"><div id="board"></div></div><aside id="stalled" role="status" hidden><strong>Sem jogadas disponíveis</strong><button id="rewind">↶ Retroceder</button><button id="restart">Nova partida</button></aside><footer><button id="undo">↶ Desfazer</button><span>✧</span><button id="hint">☼ Dica</button><button id="settings" aria-label="Configurações" title="Configurações">⚙</button></footer><p id="note" role="status"></p></main>
-<dialog><section id="preferences" hidden><h2>Configurações</h2><label class="size-control">Cartas <select id="size" aria-label="Tamanho das cartas"><option value="80">Pequenas</option><option value="100" selected>Médias</option><option value="125">Grandes</option></select></label><button id="audioPref"></button><label class="level">Volume dos efeitos <input type="range" id="volume" min="0" max="100"></label><label class="level">Música de fundo <input type="range" id="musicLevel" min="0" max="100"></label><div class="previews"><button id="previewTap">Ouvir carta</button><button id="previewDeal">Ouvir compra</button><button id="previewHint">Ouvir dica</button></div></section><article></article><button id="close">Voltar</button></dialog><script src="game.js"></script></body></html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#10122d" />
+    <title>Cat Solitarie</title>
+    <link rel="icon" href="felisnoc.png" />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="fx.css" />
+    <link rel="stylesheet" href="fx2.css" />
+  </head>
+  <body>
+    <canvas id="sky" aria-hidden="true"></canvas>
+    <header>
+      <strong><img src="felisnoc.png" alt="" /> Cat Solitarie</strong>
+      <nav>
+        <button id="audioSettings" aria-label="Configurações" title="Configurações">
+          <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button
+        ><button id="help" aria-label="Como jogar"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7M12 17h.01"/></svg></button>
+      </nav>
+    </header>
+    <section id="lobby">
+      <div class="hero-copy">
+        <small>PACIÊNCIA SPIDER</small>
+        <h1>Cat<br /><i>Solitarie</i></h1>
+        <p>Do rei ao ás, uma carta de cada vez.</p>
+        <div class="choices">
+          <button id="play">Jogar agora <span>♠</span></button
+          ><button id="resume" hidden>Continuar</button>
+        </div>
+        <button id="records"><svg class="ic" viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3"/></svg>Recordes locais</button>
+      </div>
+      <div class="fan" aria-hidden="true">
+        <div class="poster left"><label>Q ♥</label><b>♥</b></div>
+        <div class="poster right"><label>K ♣</label><b>♣</b></div>
+        <div class="poster center">
+          <label>A ♠</label>
+          <div class="seal"><img src="felisnoc.png" alt="" /></div>
+          <i>Cat Solitarie</i><label>A ♠</label>
+        </div>
+      </div>
+    </section>
+    <main id="table" hidden>
+      <div class="tools">
+        <button id="home"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Lobby</button>
+        <div class="metrics">
+          <b class="metric" data-caption="Tempo" id="time" title="Tempo"></b><span>·</span
+          ><b class="metric" data-caption="Pontos"><span id="score"></span></b
+          ><span>·</span
+          ><b
+            class="metric"
+            data-caption="Sequências"
+            id="progress"
+            title="Sequências completas"
+          ></b>
+        </div>
+        <button id="deal" title="Distribuir uma carta em cada coluna">
+          <span class="deck-icon" aria-hidden="true">♠</span
+          ><span><b>Comprar 10</b><small id="count"></small></span>
+        </button>
+      </div>
+      <div class="board-window"><div id="board"></div></div>
+      <aside id="stalled" role="status" hidden>
+        <strong>Sem jogadas disponíveis</strong><button id="rewind">↶ Retroceder</button
+        ><button id="restart">Nova partida</button>
+      </aside>
+      <footer>
+        <button id="undo">↶ Desfazer</button><span>✧</span
+        ><button id="hint">☼ Dica</button
+        ><button id="settings" aria-label="Configurações" title="Configurações">
+          <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+        </button>
+      </footer>
+      <p id="note" role="status"></p>
+    </main>
+    <dialog>
+      <section id="preferences" hidden>
+        <h2>Configurações</h2>
+        <label class="size-control"
+          >Cartas
+          <select id="size" aria-label="Tamanho das cartas">
+            <option value="80">Pequenas</option>
+            <option value="100" selected>Médias</option>
+            <option value="125">Grandes</option>
+          </select></label
+        ><button id="audioPref"></button
+        ><label class="level"
+          >Volume dos efeitos <input type="range" id="volume" min="0" max="100" /></label
+        ><button id="musicPref"></button
+        ><label class="level"
+          >Volume da música <input type="range" id="musicLevel" min="0" max="100"
+        /></label>
+      </section>
+      <article></article>
+      <button id="close">Voltar</button>
+    </dialog>
+    <script src="game.js"></script>
+    <script src="fx.js"></script>
+    <script src="fx2.js"></script>
+  </body>
+</html>

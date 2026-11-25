@@ -1,0 +1,73 @@
+/* ===== Cat Solitarie FX ===== */
+:root{--px:0;--py:0;--gold:#ffd98a;--ice:#aeeaff;--vio:#b8a2fa}
+body{background:#070a1c}
+#fxsky,#fxfx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
+#fxsky{z-index:0}#fxfx{z-index:9}
+header,main,#lobby{z-index:1}
+header{backdrop-filter:blur(14px) saturate(1.3);background:linear-gradient(180deg,#0a0f2ccc,#0a0f2c66)}
+header strong img{filter:drop-shadow(0 0 10px #b8a2fa99);animation:bob 4s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-3px) rotate(-4deg)}}
+/* ícones SVG */
+.ic{width:1.1em;height:1.1em;vertical-align:-.2em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;margin-right:.35em}
+nav button,#settings{display:grid;place-items:center;width:40px;height:40px;padding:0;border-radius:12px;font-size:16px}
+nav .ic,#settings .ic{margin:0;width:20px;height:20px}
+button{transition:transform .18s cubic-bezier(.3,1.6,.5,1),box-shadow .2s,background .2s,border-color .2s;position:relative;overflow:hidden}
+button:hover:enabled{transform:translateY(-2px)}
+button:active:enabled{transform:scale(.94)}
+.ripple{position:absolute;border-radius:50%;background:#fff6;transform:scale(0);animation:rip .6s ease-out forwards;pointer-events:none}
+@keyframes rip{to{transform:scale(4);opacity:0}}
+/* HUD */
+.metrics{backdrop-filter:blur(12px);box-shadow:0 8px 30px #04061c99,inset 0 1px #fff2;position:relative}
+.metric{min-width:54px}
+.metric:after{content:'';position:absolute}
+#time:before{content:'⏱  '+attr(data-caption)}#score:before{content:none}
+.metric b,.metric span,#time,#progress{text-shadow:0 0 12px #aeeaff55}
+.bump{animation:bump .5s cubic-bezier(.3,1.8,.5,1)}
+@keyframes bump{40%{transform:scale(1.35);color:var(--gold)}}
+footer{backdrop-filter:blur(14px);box-shadow:0 10px 34px #04061ccc,inset 0 1px #fff2}
+footer button:hover:enabled{background:#ffffff14}
+#deal{position:relative}
+#deal:hover:enabled .deck-icon{transform:rotate(-14deg) translateY(-3px)}
+.deck-icon{transition:transform .25s cubic-bezier(.3,1.6,.5,1)}
+#deal:enabled:not(:hover){animation:pulse 2.8s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 3px 22px #9a8cff77}}
+.popup{position:fixed;z-index:12;pointer-events:none;font:700 26px Georgia;color:var(--gold);text-shadow:0 0 14px #ffb84d,0 2px 4px #000;animation:pop 1.3s ease-out forwards}
+@keyframes pop{0%{transform:translate(-50%,0) scale(.4);opacity:0}20%{transform:translate(-50%,-12px) scale(1.2);opacity:1}100%{transform:translate(-50%,-70px) scale(1);opacity:0}}
+#note:not(:empty){animation:fade .35s ease-out}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}}
+/* mesa */
+.pile{background:radial-gradient(ellipse at 50% 20%,#ffffff0d,#ffffff03);border-color:#9d8fe03d;transition:box-shadow .3s,background .3s}
+.pile.target{box-shadow:0 0 0 2px var(--ice),0 0 26px #aeeaff77,inset 0 0 20px #aeeaff33;background:#aeeaff14;outline:0;animation:glow 1s ease-in-out infinite}
+@keyframes glow{50%{box-shadow:0 0 0 2px var(--ice),0 0 40px #aeeaffaa,inset 0 0 30px #aeeaff55}}
+/* cartas */
+.card{box-shadow:0 1px 0 #fff inset,0 2px 4px #04061c99,0 6px 14px #04061c55;transition:box-shadow .2s,filter .2s;transform-style:preserve-3d}
+.card.picked{outline:0;box-shadow:0 0 0 2px var(--ice),0 0 22px #aeeaffaa,0 10px 20px #04061c99;animation:float 1.6s ease-in-out infinite}
+@keyframes float{50%{transform:translateY(-4px)}}
+.card:not(.back):before{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .2s;background:radial-gradient(circle at var(--mx,50%) var(--my,30%),#fff 0,#ffffff00 45%),linear-gradient(115deg,transparent 30%,#a8f0ff55 45%,#e3b8ff55 55%,transparent 70%);mix-blend-mode:soft-light}
+.card[draggable=true]:hover{z-index:5;transform:perspective(650px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translateY(-5px) scale(1.05);box-shadow:0 18px 28px #04061ccc,0 0 18px #b8a2fa55;border-color:#b8a2fa}
+.card[draggable=true]:hover:before{opacity:1}
+.card.held,.card.held:hover{transform:translateY(-10px) rotate(-2.2deg) scale(1.06);box-shadow:0 22px 34px #04061cdd,0 0 0 2px var(--ice),0 0 26px #aeeaff88;animation:none}
+.card.back{background:radial-gradient(circle at 30% 20%,#ffffff22,transparent 50%),repeating-linear-gradient(45deg,transparent 0 7px,#c9b8ff30 8px,transparent 9px),repeating-linear-gradient(-45deg,transparent 0 7px,#8fe8ff1f 8px,transparent 9px),linear-gradient(130deg,#1b2a5c,#4a3382);box-shadow:0 2px 5px #04061c;}
+.back.card:after{box-shadow:0 0 12px #b8a2fa88,inset 0 0 8px #0003}
+.arrival{animation:arrive .5s cubic-bezier(.16,1,.3,1)}
+/* lobby */
+#lobby .fan{transform:rotate(5deg) translate(calc(var(--px)*-14px),calc(var(--py)*-10px));transition:transform .2s linear;animation:none}
+.poster{animation:drift 6s ease-in-out infinite;transition:transform .5s}
+.poster.right{animation-delay:-2s}.poster.left{animation-delay:-4s}
+@keyframes drift{50%{translate:0 -9px}}
+.fan:hover .left{transform:translateX(-42%) rotate(-24deg)}.fan:hover .right{transform:translateX(42%) rotate(22deg)}
+.fan:before{content:'';position:absolute;inset:-25%;background:radial-gradient(circle,#b8a2fa55,transparent 60%);filter:blur(20px);animation:pulse2 5s ease-in-out infinite;z-index:-1}
+@keyframes pulse2{50%{opacity:.4;transform:scale(1.12)}}
+.hero-copy h1{background:linear-gradient(100deg,#fff 20%,#cbbcff 45%,#aeeaff 55%,#fff 80%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine2 6s linear infinite;filter:drop-shadow(0 4px 24px #8a6cff66)}
+.hero-copy h1 i{color:transparent}
+@keyframes shine2{to{background-position:-250% 0}}
+.hero-copy>*{animation:rise .9s cubic-bezier(.16,1,.3,1) both}
+.hero-copy>*:nth-child(2){animation-delay:.08s}.hero-copy>*:nth-child(3){animation-delay:.16s}.hero-copy>*:nth-child(4){animation-delay:.24s}.hero-copy>*:nth-child(5){animation-delay:.32s}
+@keyframes rise{from{opacity:0;transform:translateY(24px)}}
+.choices #play{animation:pulse3 2.6s ease-in-out infinite}
+@keyframes pulse3{50%{box-shadow:0 5px 42px #9774ffaa}}
+/* diálogos */
+dialog[open]{animation:dlg .35s cubic-bezier(.16,1,.3,1);backdrop-filter:blur(18px);background:#12172dee;box-shadow:0 30px 90px #000a,0 0 0 1px #b8a2fa33}
+@keyframes dlg{from{opacity:0;transform:translateY(20px) scale(.94)}}
+.mode-option{transition:transform .2s,box-shadow .2s}.mode-option:hover{transform:translateX(5px) !important}
+@media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}

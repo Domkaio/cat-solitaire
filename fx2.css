@@ -1,0 +1,55 @@
+/* ===== Cat Solitarie FX2 ===== */
+body:after{content:'';position:fixed;inset:0;z-index:2;pointer-events:none;background:radial-gradient(ellipse at center,transparent 55%,#02031088)}
+.tools{position:relative;z-index:3}
+.metrics{gap:clamp(8px,2vw,26px);padding:8px 18px;background:linear-gradient(120deg,#16254aee,#2a2147ee);border:1px solid #b8a2fa55;border-radius:16px}
+.metric{position:relative;padding-left:26px;min-width:64px;text-align:left}
+.metric:after{content:'';position:absolute;left:0;top:50%;width:19px;height:19px;transform:translateY(-50%);background:center/contain no-repeat;filter:drop-shadow(0 0 5px #aeeaff88)}
+#time:after{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23aeeaff' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 7v5l3 2'/%3E%3C/svg%3E")}
+.metric:has(#score):after{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffd98a' stroke='%23ffd98a' stroke-width='1.5' stroke-linejoin='round'%3E%3Cpath d='M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z'/%3E%3C/svg%3E")}
+#progress:after{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239dffb8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 21V4M5 4h11l-2 4 2 4H5'/%3E%3C/svg%3E")}
+.metrics>span{display:none}
+.pips{display:flex;gap:4px;margin-left:4px}
+.pips i{width:8px;height:14px;border-radius:2px;background:#ffffff1a;border:1px solid #ffffff33;transition:all .5s cubic-bezier(.3,1.8,.5,1)}
+.pips i.on{background:linear-gradient(#ffe9a8,#ffb84d);border-color:#ffe9a8;box-shadow:0 0 9px #ffb84d99;transform:translateY(-2px) rotate(-8deg)}
+@media(max-width:600px){.pips{display:none}.metric{padding-left:20px;min-width:0}.metric:after{width:14px;height:14px}}
+#deal{border-radius:14px;background:linear-gradient(120deg,#2d3a78,#5a3d86);border:1px solid #cbbcff;box-shadow:0 4px 22px #6a45c877,inset 0 1px #fff3}
+#deal.kick{animation:kick .5s cubic-bezier(.3,1.8,.5,1)}
+@keyframes kick{30%{transform:scale(.9) rotate(-3deg)}60%{transform:scale(1.06)}}
+footer{border-radius:60px;padding:6px 10px;background:linear-gradient(180deg,#1b2147ee,#12163aee);border:1px solid #b8a2fa55}
+footer button{padding:10px 18px;border-radius:40px}
+footer button:hover:enabled{background:linear-gradient(120deg,#ffffff1c,#b8a2fa2a)}
+/* toast e dica */
+#note:not(:empty){position:fixed;left:50%;bottom:96px;z-index:11;max-width:min(92vw,520px);padding:11px 22px;border-radius:999px;text-align:center;color:#fff;background:linear-gradient(120deg,#1d2a5cf2,#3a2a6af2);border:1px solid #aeeaff88;box-shadow:0 10px 36px #04061ccc,0 0 24px #aeeaff44;backdrop-filter:blur(12px);animation:toast .5s cubic-bezier(.16,1,.3,1)}
+#note:not(:empty):before{content:'✦ ';color:var(--gold)}
+@keyframes toast{from{opacity:0;transform:translate(-50%,18px) scale(.9)}}
+#hintlayer{position:fixed;inset:0;z-index:8;pointer-events:none}
+#hintlayer svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.hpath{fill:none;stroke:url(#hg);stroke-width:3.5;stroke-linecap:round;stroke-dasharray:10 11;animation:dash .5s linear infinite;filter:drop-shadow(0 0 7px #aeeaff)}
+@keyframes dash{to{stroke-dashoffset:-21}}
+.hring{position:fixed;width:50px;height:50px;margin:-25px 0 0 -25px;border-radius:50%;border:2px solid var(--ice);box-shadow:0 0 18px var(--ice),inset 0 0 14px #aeeaff77;animation:ring 1.1s ease-out infinite}
+.hring.dst{border-color:var(--gold);box-shadow:0 0 18px var(--gold),inset 0 0 14px #ffd98a77;animation-delay:.35s}
+@keyframes ring{from{transform:scale(.4);opacity:1}to{transform:scale(1.9);opacity:0}}
+/* menus */
+dialog{border-radius:22px;border:1px solid #b8a2fa66;background:radial-gradient(ellipse at top right,#40336aee,transparent 60%),#101530f2;padding:28px}
+dialog h2{background:linear-gradient(100deg,#fff,#cbbcff,#aeeaff);-webkit-background-clip:text;background-clip:text;color:transparent}
+dialog h3{margin:18px 0 4px;color:var(--gold);font:600 14px Georgia;letter-spacing:.08em}
+dialog p{color:#d6cff0}
+#close{display:block;margin:6px auto 0;padding:10px 34px;border-radius:40px;background:linear-gradient(120deg,#cad6ff,#bea0ff);color:#191730;font-weight:700;border:0}
+.mode-option{grid-template-columns:84px 1fr auto;padding:14px 16px;border-radius:16px;background:linear-gradient(115deg,#263a6bcc,#2d2352cc);border:1px solid #9a8de066}
+.mode-option:hover{box-shadow:0 8px 28px #6a45c877,inset 3px 0 var(--ice);border-color:#cbbcff}
+.mode-art{display:flex;gap:2px;font-size:19px;min-height:46px;border-radius:9px}
+.mode-art .r{color:#c23a63}
+.mode-txt b{display:block;font:700 18px Georgia}
+.mode-txt em{display:block;font-style:normal;color:#cfc7ee;font-size:13px;margin:2px 0}
+.mode-txt small{letter-spacing:.02em;color:var(--gold);font-size:11px;font-weight:600}
+.mode-lvl{color:var(--gold);letter-spacing:3px;font-size:12px}
+#preferences{display:grid;gap:4px}
+#preferences>button{width:100%;margin:0 0 6px;text-align:left;padding:12px 16px;border-radius:12px;background:#ffffff0d}
+#preferences>button[aria-pressed=true]{border-color:var(--ice);box-shadow:inset 3px 0 var(--ice);background:#aeeaff14}
+input[type=range]{-webkit-appearance:none;appearance:none;height:6px;border-radius:6px;background:linear-gradient(90deg,#aeeaff,#b8a2fa);outline:0}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 0 12px #b8a2fa,0 2px 6px #000a;cursor:pointer}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border:0;border-radius:50%;background:#fff;box-shadow:0 0 12px #b8a2fa}
+#stalled{backdrop-filter:blur(12px);border-color:var(--gold);box-shadow:0 0 30px #ffd98a33;animation:toast .5s}
+.card:not(.back){background:linear-gradient(150deg,#fff,#eceefb 65%,#dcdff2);box-shadow:0 1px 0 #fff inset,0 -1px 0 #0001 inset,0 2px 4px #04061c99,0 6px 14px #04061c55}
+.fan:hover .center{transform:translateY(-12px) scale(1.04)}
+.center{transition:transform .4s cubic-bezier(.3,1.5,.5,1)}

@@ -13,3 +13,4 @@ Paciência Spider para desktop e celular, feito com HTML, CSS e JavaScript. O ob
 ## Modos e recordes
 
 Escolha um, dois ou quatro naipes. A partida começa com 500 pontos. Cada jogada custa um ponto e cada sequência completa rende 100. Os recordes de pontuação e tempo ficam separados por dificuldade.
+
