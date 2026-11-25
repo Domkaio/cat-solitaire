@@ -97,11 +97,17 @@ function saveUndoState() {
 
 function finishTurn() {
   const previousCount = game.done.length;
+  const flights = [];
+  const landing = animatedColumns.at(-1);
   lastTap = null;
-  for (const p of game.piles) {
+  for (const [column, p] of game.piles.entries()) {
     while (p.length) {
       p.at(-1).up = true;
       if (p.length < 13 || !isMovableSequence(p, p.length - 13)) break;
+      if (!flights.length) renderBoard();
+      const start = p.length - 13;
+      const cards = Array.from(getElement('board').children[column].children).slice(start, p.length);
+      flights.push(collectSequence(cards, p.slice(start), game.done.length, flights.length));
       game.done.push(p.at(-1).s);
       p.splice(-13);
       getElement('note').textContent = 'Sequência completa! +100 pontos ✧';
@@ -111,7 +117,6 @@ function finishTurn() {
   hintColumn = -1;
   game.moves++;
   save();
-  const landing = animatedColumns.at(-1);
   renderBoard();
   showSparks(landing);
   FX.finishTurn(game.done.length - previousCount);
@@ -128,13 +133,17 @@ function finishTurn() {
       });
       storeValue(recordKey, list);
     }
-    show(
+    const winningGame = game;
+    Promise.all(flights).then(() => {
+      if (game !== winningGame || getElement('table').hidden) return;
+      show(
       '<h2>Mesa completa ✧</h2><p>' +
         getScore() +
         ' pontos em ' +
         formatTime(game.seconds) +
         '. Seu resultado entrou nos recordes locais.</p>',
-    );
+      );
+    });
   }
 }
 
@@ -314,6 +323,7 @@ getElement('deal').onclick = () => {
 };
 getElement('undo').onclick = () => {
   if (!game.history.length || game.done.length === 8) return;
+  cancelCollectionFlights();
   [game.piles, game.stock, game.done] = JSON.parse(game.history.pop());
   lastTap = null;
   cardAudio.play('undo');
@@ -554,6 +564,7 @@ function enterTable() {
 }
 getElement('resume').onclick = enterTable;
 getElement('home').onclick = () => {
+  cancelCollectionFlights();
   save();
   selected = null;
   hintColumn = -1;
