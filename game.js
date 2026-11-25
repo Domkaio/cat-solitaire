@@ -21,7 +21,7 @@ function settle(){
  selected=null;target=-1;g.moves++;save();const landing=animated.at(-1);render();tone(g.done.length>before?'complete':distributed?'deal':'move');spark(landing);
  if(g.done.length===8){let list=read(recordKey,[]);if(!list.some(x=>x.id===g.id)){list.push({id:g.id,n:g.n,points:points(),time:g.seconds});write(recordKey,list)}show('<h2>Mesa completa ✧</h2><p>'+points()+' pontos em '+clock(g.seconds)+'. Seu resultado entrou nos recordes locais.</p>')}
 }
-function move(a,i,b){if(!legal(a,i,b))return false;checkpoint();g.piles[b].push(...g.piles[a].splice(i));animated=[b];settle();return true}
+function move(a,i,b){if(!legal(a,i,b))return false;const origin=$('board').children[a].children[i].getBoundingClientRect();const cards=g.piles[a].slice(i);checkpoint();g.piles[b].push(...g.piles[a].splice(i));animated=[b];settle();cards.forEach((c,k)=>{const index=g.piles[b].indexOf(c);if(index>=0)fly($('board').children[b].children[index],origin,0,k===0)});return true}
 const sizeControl=$('size');
 const savedSize=String(read(key+'.size',100));
 sizeControl.value=['80','100','125'].includes(savedSize)?savedSize:'100';
@@ -45,7 +45,14 @@ function autoDestination(a,i){
  const card=g.piles[a][i];
  if(!sequence(g.piles[a],i))return -1;
  const options=g.piles.map((pile,b)=>({pile,b})).filter(({pile,b})=>pile.length&&legal(a,i,b));
- return (options.find(({pile})=>pile.at(-1).s===card.s)||options[0])?.b??-1;
+ function runLength(pile){
+  let i=pile.length-1;
+  while(i>0 && pile[i-1].up && pile[i-1].r===pile[i].r+1)i--;
+  return pile.length-i;
+ }
+ options.sort((x,y)=>runLength(y.pile)-runLength(x.pile) ||
+  Number(y.pile.at(-1).s===card.s)-Number(x.pile.at(-1).s===card.s));
+ return options[0]?.b??-1;
 }
 $('board').onclick=e=>{
  const t=pos(e);if(!t)return;
@@ -61,12 +68,12 @@ $('board').onclick=e=>{
 };
 $('board').ondragstart=e=>{drag=pos(e);if(!drag)return;e.dataTransfer.setData('text/plain','carta');e.dataTransfer.effectAllowed='move'};
 $('board').ondragover=e=>e.preventDefault();$('board').ondrop=e=>{e.preventDefault();const t=pos(e);if(drag&&t)move(drag.a,drag.i,t.a);drag=null};$('board').ondragend=()=>drag=null;
-$('deal').onclick=()=>{if(!g.stock.length)return;if(g.piles.some(p=>!p.length)){ $('note').textContent='Preencha as colunas vazias antes de distribuir.';return}checkpoint();g.piles.forEach(p=>{const c=g.stock.pop();c.up=true;p.push(c)});animated=g.piles.map((_,i)=>i);settle()};
+$('deal').onclick=()=>{if(!g.stock.length)return;if(g.piles.some(p=>!p.length)){ $('note').textContent='Preencha as colunas vazias antes de distribuir.';return}checkpoint();g.piles.forEach(p=>{const c=g.stock.pop();c.up=true;p.push(c)});animated=g.piles.map((_,i)=>i);settle();dealFlight(false)};
 $('undo').onclick=()=>{if(!g.history.length||g.done.length===8)return;[g.piles,g.stock,g.done]=JSON.parse(g.history.pop());lastTap=null;tone('undo');g.moves++;selected=null;target=-1;$('note').textContent='Última jogada desfeita.';save();render()};
 $('hint').onclick=()=>{let best=null;g.piles.forEach((p,a)=>p.forEach((c,i)=>g.piles.forEach((q,b)=>{if(!legal(a,i,b)||(!i&&!q.length))return;const value=(q.at(-1)?.s===c.s?4:0)+(i&&!p[i-1].up?2:0)+(q.length?1:0);if(!best||value>best.value)best={a,i,b,value}})));if(best){selected={a:best.a,i:best.i};target=best.b;$('note').textContent='Mova '+ranks[g.piles[best.a][best.i].r]+suits[g.piles[best.a][best.i].s]+' da coluna '+(best.a+1)+' para a '+(best.b+1)+'.';render()}else $('note').textContent=g.stock.length?'Tente distribuir uma nova fileira.':'Tente desfazer uma jogada.'};
-function show(html){article.innerHTML=html;if(!dialog.open)dialog.showModal()}
-$('close').onclick=()=>dialog.close();$('help').onclick=()=>show('<h2>Como jogar</h2><p>Forme oito sequências do rei ao ás, todas do mesmo naipe. Coloque uma carta sobre outra de valor imediatamente maior. Uma coluna vazia aceita qualquer carta.</p><p>Dê dois cliques ou dois toques para encaixar automaticamente, com preferência pelo mesmo naipe. Arraste com o mouse ou toque na carta e depois na coluna de destino. Um grupo só se move junto quando está em ordem e tem o mesmo naipe.</p><p>Cada jogada custa 1 ponto. Completar uma sequência rende 100. A reserva distribui uma carta por coluna.</p>');
-$('play').onclick=()=>{show('<h2>Nova partida</h2><p>Escolha a dificuldade para substituir a mesa atual.</p>'+[1,2,4].map(n=>'<button data-n="'+n+'">'+n+(n===1?' naipe':' naipes')+'</button>').join(''));article.querySelectorAll('button').forEach(b=>b.onclick=()=>{g=create(+b.dataset.n);saved=g;selected=null;target=-1;animated=g.piles.map((_,i)=>i);$('note').textContent='';dialog.close();enterTable();save()})};
+function show(html){$('preferences').hidden=true;article.innerHTML=html;if(!dialog.open)dialog.showModal()}
+$('close').onclick=()=>dialog.close();$('help').onclick=()=>show('<h2>Como jogar</h2><p>Forme oito sequências do rei ao ás, todas do mesmo naipe. Coloque uma carta sobre outra de valor imediatamente maior. Uma coluna vazia aceita qualquer carta.</p><p>Dê dois cliques ou dois toques para encaixar automaticamente, priorizando a sequência aberta mais longa e, no empate, o mesmo naipe. Arraste com o mouse ou toque na carta e depois na coluna de destino. Um grupo só se move junto quando está em ordem e tem o mesmo naipe.</p><p>Cada jogada custa 1 ponto. Completar uma sequência rende 100. A reserva distribui uma carta por coluna.</p>');
+$('play').onclick=()=>{show('<h2>Nova partida</h2><p>Escolha a dificuldade para substituir a mesa atual.</p>'+[1,2,4].map(n=>'<button data-n="'+n+'">'+n+(n===1?' naipe':' naipes')+'</button>').join(''));article.querySelectorAll('button').forEach(b=>b.onclick=()=>{g=create(+b.dataset.n);saved=g;selected=null;target=-1;animated=g.piles.map((_,i)=>i);$('note').textContent='';dialog.close();enterTable();dealFlight(true);save()})};
 $('records').onclick=()=>{const list=read(recordKey,[]);show('<h2>Recordes locais</h2>'+[1,2,4].map(n=>{const rows=list.filter(x=>x.n===n);return '<h3>'+n+(n===1?' naipe':' naipes')+'</h3><p>'+(rows.length?'Melhor pontuação · '+Math.max(...rows.map(x=>x.points))+'<br>Melhor tempo · '+clock(Math.min(...rows.map(x=>x.time))):'Nenhuma vitória ainda.')+'</p>'}).join(''))};
 setInterval(()=>{if(!$('table').hidden&&!document.hidden&&!dialog.open&&g.done.length<8){g.seconds++;$('time').textContent=clock(g.seconds);if(g.seconds%5===0)save()}},1000);addEventListener('pagehide',save);document.addEventListener('visibilitychange',save);
 const canvas=$('sky'),ctx=canvas.getContext('2d');let dx=0,dy=0;
@@ -83,8 +90,8 @@ function tone(type){
  try{
   audio??=new (window.AudioContext||window.webkitAudioContext)();
   if(audio.state==='suspended')audio.resume().catch(()=>{});
-  const notes={move:[392,523],deal:[247,294,349],complete:[392,494,587,784],undo:[392,294],start:[330,494]}[type];
-  notes.forEach((freq,i)=>{const osc=audio.createOscillator(),gain=audio.createGain(),t=audio.currentTime+i*.055;osc.type='sine';osc.frequency.value=freq;gain.gain.setValueAtTime(.001,t);gain.gain.exponentialRampToValueAtTime(.07,t+.009);gain.gain.exponentialRampToValueAtTime(.001,t+.18);osc.connect(gain);gain.connect(audio.destination);osc.start(t);osc.stop(t+.2)});
+  const notes={tap:[730],move:[392,523],deal:[247,294,349],complete:[392,494,587,784],undo:[392,294],start:[330,494]}[type];
+  notes.forEach((freq,i)=>{const osc=audio.createOscillator(),gain=audio.createGain(),t=audio.currentTime+i*.055;osc.type='sine';osc.frequency.value=freq;gain.gain.setValueAtTime(.001,t);gain.gain.exponentialRampToValueAtTime(type==='tap'?.022:.07,t+.009);gain.gain.exponentialRampToValueAtTime(.001,t+.18);osc.connect(gain);gain.connect(audio.destination);osc.start(t);osc.stop(t+.2)});
  }catch{}
 }
 function spark(col){
@@ -98,3 +105,20 @@ function enterTable(){lastTap=null;$('lobby').hidden=true;$('table').hidden=fals
 $('resume').onclick=enterTable;
 $('home').onclick=()=>{save();selected=null;target=-1;lastTap=null;$('lobby').hidden=false;$('table').hidden=true;syncLobby();scrollTo(0,0)};
 $('sound').onclick=()=>{muted=!muted;write(key+'.muted',muted);soundLabel();tone('move')};soundLabel();
+
+function fly(el,origin,delay,clickSound){
+ if(!el||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+ el.classList.remove('arrival');
+ const box=el.getBoundingClientRect();
+ const motion=el.animate([{transform:'translate('+ (origin.left-box.left)+'px,'+(origin.top-box.top)+'px) scale(.8)',opacity:.65},{transform:'none',opacity:1}],{delay,duration:245,fill:'backwards',easing:'cubic-bezier(.2,.7,.25,1)'});
+ motion.onfinish=()=>{if(clickSound&&el.isConnected&&!$('table').hidden)tone('tap')};
+}
+function dealFlight(opening){
+ const origin=$('deal').getBoundingClientRect();
+ Array.from($('board').children).forEach((pile,col)=>{
+  if(opening)Array.from(pile.children).forEach((el,row)=>fly(el,origin,(row*10+col)*15,col===0));
+  else fly(pile.lastElementChild,origin,col*32,true);
+ });
+}
+$('settings').onclick=()=>{show('');$('preferences').hidden=false;$('audioPref').textContent=$('sound').textContent;sizeControl.focus()};
+$('audioPref').onclick=()=>{$('sound').click();$('audioPref').textContent=$('sound').textContent};
