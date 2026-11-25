@@ -37,7 +37,7 @@ function render(){
  p.forEach((c,i)=>{const el=document.createElement('div');el.className='card '+(!c.up?'back':c.s%2?'red':'')+(selected?.a===a&&i>=selected.i?' picked':'')+(animated.includes(a)&&i===p.length-1?' arrival':'');el.style.top=top+'px';el.dataset.i=i;
  if(c.up){el.innerHTML=ranks[c.r]+'<em>'+suits[c.s]+'</em><span class="pip">'+suits[c.s]+'</span><span class="corner">'+ranks[c.r]+'</span>';el.draggable=sequence(p,i)}
  col.append(el);if(i<p.length-1)top+=c.up?Math.max(18,col.clientWidth*.25):Math.max(6,Math.min(13,innerWidth*.011));
- });max=Math.max(max,top+col.clientWidth/0.71)});board.style.height=Math.ceil(max+12)+'px';animated=[]
+ });max=Math.max(max,top+col.clientWidth/0.71)});board.style.height=Math.ceil(max+12)+'px';animated=[];updateStall()
 }
 function pos(e){const col=e.target.closest('.pile');return col?{a:+col.dataset.a,i:+(e.target.closest('.card')?.dataset.i??-1)}:null}
 let lastTap=null;
@@ -73,7 +73,15 @@ $('undo').onclick=()=>{if(!g.history.length||g.done.length===8)return;[g.piles,g
 $('hint').onclick=()=>{let best=null;g.piles.forEach((p,a)=>p.forEach((c,i)=>g.piles.forEach((q,b)=>{if(!legal(a,i,b)||(!i&&!q.length))return;const value=(q.at(-1)?.s===c.s?4:0)+(i&&!p[i-1].up?2:0)+(q.length?1:0);if(!best||value>best.value)best={a,i,b,value}})));if(best){selected={a:best.a,i:best.i};target=best.b;$('note').textContent='Mova '+ranks[g.piles[best.a][best.i].r]+suits[g.piles[best.a][best.i].s]+' da coluna '+(best.a+1)+' para a '+(best.b+1)+'.';render()}else $('note').textContent=g.stock.length?'Tente distribuir uma nova fileira.':'Tente desfazer uma jogada.'};
 function show(html){$('preferences').hidden=true;article.innerHTML=html;if(!dialog.open)dialog.showModal()}
 $('close').onclick=()=>dialog.close();$('help').onclick=()=>show('<h2>Como jogar</h2><p>Forme oito sequências do rei ao ás, todas do mesmo naipe. Coloque uma carta sobre outra de valor imediatamente maior. Uma coluna vazia aceita qualquer carta.</p><p>Dê dois cliques ou dois toques para encaixar automaticamente, priorizando a sequência aberta mais longa e, no empate, o mesmo naipe. Arraste com o mouse ou toque na carta e depois na coluna de destino. Um grupo só se move junto quando está em ordem e tem o mesmo naipe.</p><p>Cada jogada custa 1 ponto. Completar uma sequência rende 100. A reserva distribui uma carta por coluna.</p>');
-$('play').onclick=()=>{show('<h2>Nova partida</h2><p>Escolha a dificuldade para substituir a mesa atual.</p>'+[1,2,4].map(n=>'<button data-n="'+n+'">'+n+(n===1?' naipe':' naipes')+'</button>').join(''));article.querySelectorAll('button').forEach(b=>b.onclick=()=>{g=create(+b.dataset.n);saved=g;selected=null;target=-1;animated=g.piles.map((_,i)=>i);$('note').textContent='';dialog.close();enterTable();dealFlight(true);save()})};
+$('play').onclick=()=>{
+ const modes=[[1,'Casual','♠'],[2,'Estratégico','♠ ♥'],[4,'Especialista','♠ ♥ ♣ ♦']];
+ show('<div class="mode-head"><img src="felisnoc.png" alt=""><div><h2>Nova partida</h2><p>Escolha seu baralho.</p></div></div><div class="mode-list">'+modes.map(([n,name,icons])=>'<button class="mode-option" data-n="'+n+'"><span class="mode-art">'+icons+'</span><span><b>'+name+'</b><small>'+n+(n===1?' naipe':' naipes')+'</small></span><span aria-hidden="true">›</span></button>').join('')+'</div>'+(g.moves&&saved?'<p>A escolha inicia uma nova mesa.</p>':''));
+ article.querySelectorAll('[data-n]').forEach(button=>button.onclick=()=>{
+  g=create(Number(button.dataset.n));saved=g;selected=null;target=-1;
+  animated=g.piles.map((_,i)=>i);$('note').textContent='';
+  dialog.close();enterTable();dealFlight(true);save();
+ });
+};
 $('records').onclick=()=>{const list=read(recordKey,[]);show('<h2>Recordes locais</h2>'+[1,2,4].map(n=>{const rows=list.filter(x=>x.n===n);return '<h3>'+n+(n===1?' naipe':' naipes')+'</h3><p>'+(rows.length?'Melhor pontuação · '+Math.max(...rows.map(x=>x.points))+'<br>Melhor tempo · '+clock(Math.min(...rows.map(x=>x.time))):'Nenhuma vitória ainda.')+'</p>'}).join(''))};
 setInterval(()=>{if(!$('table').hidden&&!document.hidden&&!dialog.open&&g.done.length<8){g.seconds++;$('time').textContent=clock(g.seconds);if(g.seconds%5===0)save()}},1000);addEventListener('pagehide',save);document.addEventListener('visibilitychange',save);
 const canvas=$('sky'),ctx=canvas.getContext('2d');let dx=0,dy=0;
@@ -90,8 +98,20 @@ function tone(type){
  try{
   audio??=new (window.AudioContext||window.webkitAudioContext)();
   if(audio.state==='suspended')audio.resume().catch(()=>{});
-  const notes={tap:[730],move:[392,523],deal:[247,294,349],complete:[392,494,587,784],undo:[392,294],start:[330,494]}[type];
-  notes.forEach((freq,i)=>{const osc=audio.createOscillator(),gain=audio.createGain(),t=audio.currentTime+i*.055;osc.type='sine';osc.frequency.value=freq;gain.gain.setValueAtTime(.001,t);gain.gain.exponentialRampToValueAtTime(type==='tap'?.022:.07,t+.009);gain.gain.exponentialRampToValueAtTime(.001,t+.18);osc.connect(gain);gain.connect(audio.destination);osc.start(t);osc.stop(t+.2)});
+  const rustle=['move','start','deal','lift'].includes(type);
+  const duration=rustle?.12:.058;
+  const buffer=audio.createBuffer(1,Math.ceil(audio.sampleRate*duration),audio.sampleRate);
+  const samples=buffer.getChannelData(0);
+  let low=0;
+  for(let i=0;i<samples.length;i++){
+   const t=i/samples.length;
+   low=.62*low+.38*(Math.random()*2-1);
+   const paper=low*(.65+.35*Math.sin(i*.037));
+   samples[i]=paper*Math.min(1,t*20)*Math.exp(-t*(rustle?3:8));
+  }
+  const source=audio.createBufferSource(),filter=audio.createBiquadFilter(),gain=audio.createGain();
+  source.buffer=buffer;filter.type='bandpass';filter.frequency.value=(rustle?2600:1350)+Math.random()*450;filter.Q.value=.65;
+  gain.gain.value=rustle?.65:.8;source.connect(filter);filter.connect(gain);gain.connect(audio.destination);source.start();
  }catch{}
 }
 function spark(col){
@@ -122,3 +142,30 @@ function dealFlight(opening){
 }
 $('settings').onclick=()=>{show('');$('preferences').hidden=false;$('audioPref').textContent=$('sound').textContent;sizeControl.focus()};
 $('audioPref').onclick=()=>{$('sound').click();$('audioPref').textContent=$('sound').textContent};
+
+function hasNextAction(){
+ if(g.stock.length&&g.piles.every(p=>p.length))return true;
+ return g.piles.some((p,a)=>p.some((_,i)=>g.piles.some((q,b)=>
+   (q.length||i>0)&&legal(a,i,b))));
+}
+function updateStall(){
+ const stalled=g.done.length<8&&!hasNextAction();
+ $('stalled').hidden=!stalled;
+ $('rewind').disabled=!g.history.length;
+}
+$('rewind').onclick=()=>$('undo').click();
+$('restart').onclick=()=>$('play').click();
+let held=[];
+function releaseCards(){
+ held.forEach(el=>el.classList.remove('held'));
+ held=[];
+}
+$('board').addEventListener('pointerdown',e=>{
+ releaseCards();
+ const t=pos(e);
+ if(e.button!==0||!t||!sequence(g.piles[t.a],t.i))return;
+ held=Array.from($('board').children[t.a].children).slice(t.i);
+ held.forEach(el=>el.classList.add('held'));
+ tone('lift');
+});
+for(const event of ['pointerup','pointercancel','dragend','blur'])window.addEventListener(event,releaseCards);
