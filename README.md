@@ -1,4 +1,4 @@
-# Cat Solitarie 🐾
+# Cat Solitaire 🐾
 
 Paciência Spider para desktop e celular, feito com HTML, CSS e JavaScript. O objetivo é completar oito sequências do rei ao ás, cada uma com cartas do mesmo naipe.
 
