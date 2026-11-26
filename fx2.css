@@ -1,4 +1,4 @@
-/* ===== Cat Solitarie FX2 ===== */
+/* ===== Cat Solitaire FX2 ===== */
 body:after{content:'';position:fixed;inset:0;z-index:2;pointer-events:none;background:radial-gradient(ellipse at center,transparent 55%,#02031088)}
 .tools{position:relative;z-index:3}
 .metrics{gap:clamp(8px,2vw,26px);padding:8px 18px;background:linear-gradient(120deg,#16254aee,#2a2147ee);border:1px solid #b8a2fa55;border-radius:16px}
