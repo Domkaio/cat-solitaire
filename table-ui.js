@@ -63,7 +63,7 @@
     const recs = readStoredValue(recordKey, []);
     const info = {
       1: ['Casual', 'Relaxe e aprenda o jogo.', 1],
-      2: ['Estratégico', 'Exige planejamento a cada jogada.', 2],
+      2: ['Estratégico', 'Alterne espadas e copas a cada carta.', 2],
       4: ['Especialista', 'O desafio máximo para veteranos.', 3]
     };
     article.querySelectorAll('.mode-option').forEach(b => {

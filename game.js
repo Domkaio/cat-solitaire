@@ -66,6 +66,11 @@ const save = () => {
 const formatTime = (t) => Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
 const getScore = () => 500 + 100 * game.done.length - game.moves;
 
+function canStackOn(card, base) {
+  if (!base.up || base.r !== card.r + 1) return false;
+  return game.n !== 2 || card.s % 2 !== base.s % 2;
+}
+
 function isMovableSequence(pile, startIndex) {
   const firstCard = pile[startIndex];
   if (!firstCard?.up) return false;
@@ -73,7 +78,7 @@ function isMovableSequence(pile, startIndex) {
   for (let index = startIndex + 1; index < pile.length; index++) {
     const card = pile[index];
     const previous = pile[index - 1];
-    if (!card.up || card.s !== firstCard.s || previous.r !== card.r + 1) {
+    if (!card.up || !canStackOn(card, previous) || (game.n !== 2 && card.s !== previous.s)) {
       return false;
     }
   }
@@ -86,7 +91,7 @@ function canMove(fromColumn, startIndex, toColumn) {
   return (
     fromColumn !== toColumn &&
     isMovableSequence(source, startIndex) &&
-    (!destination.length || destination.at(-1).r === source[startIndex].r + 1)
+    (!destination.length || canStackOn(source[startIndex], destination.at(-1)))
   );
 }
 
@@ -253,7 +258,7 @@ function findAutoDestination(fromColumn, startIndex) {
     .filter(({ pile, b }) => pile.length && canMove(fromColumn, startIndex, b));
   function runLength(pile) {
     let i = pile.length - 1;
-    while (i > 0 && pile[i - 1].up && pile[i - 1].r === pile[i].r + 1) i--;
+    while (i > 0 && canStackOn(pile[i], pile[i - 1])) i--;
     return pile.length - i;
   }
   options.sort(
@@ -385,7 +390,7 @@ function show(html) {
 getElement('close').onclick = () => dialog.close();
 getElement('help').onclick = () =>
   show(
-    '<h2>Como jogar</h2><p>Forme oito sequências do rei ao ás, todas do mesmo naipe. Coloque uma carta sobre outra de valor imediatamente maior. Uma coluna vazia aceita qualquer carta.</p><p>Dê dois cliques ou dois toques para encaixar automaticamente, priorizando a sequência aberta mais longa e, no empate, o mesmo naipe. Arraste com o mouse ou toque na carta e depois na coluna de destino. Um grupo só se move junto quando está em ordem e tem o mesmo naipe.</p><p>Cada jogada custa 1 ponto. Completar uma sequência rende 100. A reserva distribui uma carta por coluna.</p>',
+    '<h2>Como jogar</h2><p>Forme oito sequências do rei ao ás. No modo de dois naipes, alterne preto e vermelho a cada carta, tanto para encaixar quanto para mover ou completar uma sequência. Coloque uma carta sobre outra de valor imediatamente maior. Uma coluna vazia aceita qualquer carta.</p><p>Dê dois cliques ou dois toques para encaixar automaticamente, priorizando a sequência aberta mais longa e, no empate, o mesmo naipe. Arraste com o mouse ou toque na carta e depois na coluna de destino. Nos modos de um e quatro naipes, as cartas de um grupo precisam estar em ordem e ser do mesmo naipe para mover ou completar a sequência.</p><p>Cada jogada custa 1 ponto. Completar uma sequência rende 100. A reserva distribui uma carta por coluna.</p>',
   );
 getElement('play').onclick = () => {
   const modes = [
